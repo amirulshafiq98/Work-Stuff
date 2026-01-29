@@ -1,0 +1,253 @@
+'=========================================================
+' Recursive batch fix with:
+'  - Progress counter (status bar)
+'  - Summary at end
+'  - CSV log output (updated / no-change / failed)
+'
+' Rules:
+'  - Pick top folder (contains district subfolders)
+'  - Recurse into subfolders, SKIP any folder named "Old"
+'  - Process .xlsx files (skip "~$" temp)
+'  - In each workbook:
+'       - Only sheets #5 onwards
+'       - Skip sheet named "Student Masterlist" (if it appears)
+'       - Only range L25:AO26
+'       - For formulas only: change vertical range ends ":<COL>19" -> ":<COL>24"
+'
+' Log:
+'  - Writes BatchFix_Log_YYYYMMDD_HHMMSS.csv in the TOP folder you selected
+'=========================================================
+
+Public Sub BatchFix_Recursive_Range19_to_24_WithProgress_AndLog()
+    Dim rootPath As String
+    Dim files As Collection
+    Dim i As Long
+
+    Dim processed As Long, updated As Long, failed As Long, nochange As Long
+    Dim fullPath As String
+    Dim ok As Boolean, didUpdate As Boolean
+    Dim logPath As String
+    Dim logNum As Integer
+
+    rootPath = PickFolder()
+    If rootPath = "" Then Exit Sub
+    If Right(rootPath, 1) <> "\" Then rootPath = rootPath & "\"
+
+    Set files = New Collection
+    CollectXlsxFilesRecursive rootPath, files
+
+    If files.Count = 0 Then
+        MsgBox "No .xlsx files found under:" & vbCrLf & rootPath, vbExclamation
+        Exit Sub
+    End If
+
+    'Create log file in the selected top folder
+    logPath = rootPath & "BatchFix_Log_" & TimeStamp_YYYYMMDD_HHMMSS() & ".csv"
+    logNum = FreeFile
+    Open logPath For Output As #logNum
+    Print #logNum, "timestamp,status,full_path,message"
+
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.EnableEvents = False
+
+    For i = 1 To files.Count
+        fullPath = CStr(files(i))
+
+        Application.StatusBar = "Processing " & i & " / " & files.Count & ": " & FileNameOnly(fullPath)
+
+        ok = ProcessWorkbook(fullPath, didUpdate)
+
+        processed = processed + 1
+
+        If ok Then
+            If didUpdate Then
+                updated = updated + 1
+                Print #logNum, CsvLine("UPDATED", fullPath, "Saved changes")
+            Else
+                nochange = nochange + 1
+                Print #logNum, CsvLine("NO_CHANGE", fullPath, "No formula matched (already correct or no formulas)")
+            End If
+        Else
+            failed = failed + 1
+            Print #logNum, CsvLine("FAILED", fullPath, "Could not open/save (locked, permission, or corrupt)")
+        End If
+    Next i
+
+    Application.StatusBar = False
+    Application.EnableEvents = True
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+
+    Close #logNum
+
+    MsgBox "Complete!" & vbCrLf & vbCrLf & _
+           "Top folder: " & rootPath & vbCrLf & _
+           "Log file: " & logPath & vbCrLf & vbCrLf & _
+           "Total files found: " & files.Count & vbCrLf & _
+           "Processed: " & processed & vbCrLf & _
+           "Updated (had changes): " & updated & vbCrLf & _
+           "No changes needed: " & nochange & vbCrLf & _
+           "Failed: " & failed, vbInformation
+End Sub
+
+'-----------------------------
+' Collect files recursively
+'-----------------------------
+Private Sub CollectXlsxFilesRecursive(ByVal folderPath As String, ByRef files As Collection)
+    Dim fso As Object
+    Dim folder As Object, subfolder As Object, file As Object
+
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(folderPath)
+
+    ' Add .xlsx files in this folder
+    For Each file In folder.Files
+        If LCase(fso.GetExtensionName(file.Name)) = "xlsx" Then
+            If Left(file.Name, 2) <> "~$" Then
+                files.Add file.Path
+            End If
+        End If
+    Next file
+
+    ' Recurse into subfolders, but skip "Old"
+    For Each subfolder In folder.SubFolders
+        If LCase(subfolder.Name) <> "old" Then
+            CollectXlsxFilesRecursive subfolder.Path, files
+        End If
+    Next subfolder
+End Sub
+
+'-----------------------------
+' Process one workbook
+' Returns:
+'   True  = opened/processed ok
+'   False = error (locked/corrupt/etc.)
+' didUpdate:
+'   True  = at least 1 formula changed
+'-----------------------------
+Private Function ProcessWorkbook(ByVal fullPath As String, ByRef didUpdate As Boolean) As Boolean
+    Dim wb As Workbook
+
+    didUpdate = False
+
+    On Error GoTo HandleErr
+    Set wb = Workbooks.Open(Filename:=fullPath, UpdateLinks:=False, ReadOnly:=False)
+
+    didUpdate = FixWorkbook_Formulas_L25_AO26_FromSheet5(wb)
+
+    ' Save only if changed (reduces OneDrive churn)
+    wb.Close SaveChanges:=didUpdate
+    Set wb = Nothing
+
+    ProcessWorkbook = True
+    Exit Function
+
+HandleErr:
+    On Error Resume Next
+    If Not wb Is Nothing Then wb.Close SaveChanges:=False
+    Set wb = Nothing
+    On Error GoTo 0
+
+    ProcessWorkbook = False
+End Function
+
+'-----------------------------
+' Fix formulas in a workbook
+' Returns True if anything changed
+'-----------------------------
+Private Function FixWorkbook_Formulas_L25_AO26_FromSheet5(ByVal wb As Workbook) As Boolean
+    Dim ws As Worksheet
+    Dim rng As Range, cell As Range
+    Dim f As String, f2 As String
+    Dim sheetIndex As Long
+    Dim changed As Boolean
+
+    changed = False
+
+    ' Start from sheet #5 onwards
+    For sheetIndex = 5 To wb.Worksheets.Count
+        Set ws = wb.Worksheets(sheetIndex)
+
+        ' Keep this check: prevents accidental edits to a masterlist tab if it appears later
+        If LCase(ws.Name) <> LCase("Student Masterlist") Then
+            Set rng = ws.Range("L25:AO26")
+
+            For Each cell In rng.Cells
+                If cell.HasFormula Then
+                    f = cell.Formula
+                    f2 = ReplaceRangeEndRow(f, 19, 24)
+
+                    If f2 <> f Then
+                        cell.Formula = f2
+                        changed = True
+                    End If
+                End If
+            Next cell
+        End If
+    Next sheetIndex
+
+    FixWorkbook_Formulas_L25_AO26_FromSheet5 = changed
+End Function
+
+'-----------------------------
+' Replace ending row in vertical ranges: ":L19" -> ":L24"
+' Handles absolute too: ":$L$19" -> ":$L$24"
+'-----------------------------
+Private Function ReplaceRangeEndRow(ByVal formulaText As String, ByVal oldRow As Long, ByVal newRow As Long) As String
+    Dim re As Object
+    Set re = CreateObject("VBScript.RegExp")
+
+    re.Global = True
+    re.IgnoreCase = True
+
+    re.Pattern = "(:\$?[A-Z]{1,3}\$?)" & oldRow & "(\b)"
+    ReplaceRangeEndRow = re.Replace(formulaText, "$1" & newRow & "$2")
+End Function
+
+'-----------------------------
+' Logging helpers
+'-----------------------------
+Private Function TimeStamp_YYYYMMDD_HHMMSS() As String
+    TimeStamp_YYYYMMDD_HHMMSS = Format(Now, "yyyymmdd_hhnnss")
+End Function
+
+Private Function CsvLine(ByVal status As String, ByVal path As String, ByVal msg As String) As String
+    ' timestamp,status,full_path,message
+    CsvLine = Quote(Format(Now, "yyyy-mm-dd hh:nn:ss")) & "," & _
+              Quote(status) & "," & _
+              Quote(path) & "," & _
+              Quote(msg)
+End Function
+
+Private Function Quote(ByVal s As String) As String
+    s = Replace(s, """", """""") 'escape quotes
+    Quote = """" & s & """"
+End Function
+
+'-----------------------------
+' UI helpers
+'-----------------------------
+Private Function PickFolder() As String
+    Dim fd As FileDialog
+    Set fd = Application.FileDialog(msoFileDialogFolderPicker)
+
+    fd.Title = "Select TOP folder containing district subfolders (CENTRAL, NORTHEAST, ...)"
+    fd.AllowMultiSelect = False
+
+    If fd.Show = -1 Then
+        PickFolder = fd.SelectedItems(1)
+    Else
+        PickFolder = ""
+    End If
+End Function
+
+Private Function FileNameOnly(ByVal fullPath As String) As String
+    Dim pos As Long
+    pos = InStrRev(fullPath, "\")
+    If pos > 0 Then
+        FileNameOnly = Mid$(fullPath, pos + 1)
+    Else
+        FileNameOnly = fullPath
+    End If
+End Function
