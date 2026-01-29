@@ -1,0 +1,74 @@
+Sub PasteRangeIntoFilteredColumns_Extra()
+    Dim sourceRange As Range
+    Dim destinationRange As Range
+    Dim sourceSheet As Worksheet
+    Dim destSheet As Worksheet
+    Dim sourceRow As Long, destRow As Long
+    Dim col As Long
+    Dim sourceStartRow As Long, sourceEndRow As Long
+    Dim destStartRow As Long, destEndRow As Long
+    
+    ' Get the currently selected source range
+    Set sourceRange = Application.Selection
+    Set sourceSheet = sourceRange.Worksheet
+    
+    ' Get destination range from user
+    Set destinationRange = Application.InputBox("Please select the destination range:", Type:=8)
+    Set destSheet = destinationRange.Worksheet
+    
+    ' Validate that both ranges have the same number of columns
+    If sourceRange.Columns.Count <> destinationRange.Columns.Count Then
+        MsgBox "Source and destination ranges must have the same number of columns!"
+        Exit Sub
+    End If
+    
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    
+    ' Get the row boundaries
+    sourceStartRow = sourceRange.Row
+    sourceEndRow = sourceRange.Row + sourceRange.Rows.Count - 1
+    destStartRow = destinationRange.Row
+    destEndRow = destinationRange.Row + destinationRange.Rows.Count - 1
+    
+    ' Initialize destination row counter
+    destRow = destStartRow
+    
+    ' Loop through each source row
+    For sourceRow = sourceStartRow To sourceEndRow
+        ' Check if source row is visible (not filtered out)
+        If sourceSheet.Rows(sourceRow).Hidden = False Then
+            ' Find next visible destination row
+            Do While destRow <= destEndRow And destSheet.Rows(destRow).Hidden = True
+                destRow = destRow + 1
+            Loop
+            
+            ' If we found a visible destination row
+            If destRow <= destEndRow Then
+                ' Copy all columns from this source row to destination row
+                For col = 1 To sourceRange.Columns.Count
+                    Dim sourceCell As Range
+                    Dim destCell As Range
+                    
+                    Set sourceCell = sourceSheet.Cells(sourceRow, sourceRange.Column + col - 1)
+                    Set destCell = destSheet.Cells(destRow, destinationRange.Column + col - 1)
+                    
+                    ' Copy the value (including blanks)
+                    destCell.Value = sourceCell.Value
+                Next col
+                
+                ' Move to next destination row
+                destRow = destRow + 1
+            Else
+                ' No more visible destination rows
+                Exit For
+            End If
+        End If
+    Next sourceRow
+    
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+    
+    MsgBox "Paste operation completed! Copied " & sourceRange.Columns.Count & " columns with blanks preserved."
+    
+End Sub
