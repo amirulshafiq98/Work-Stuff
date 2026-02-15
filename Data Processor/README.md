@@ -1,199 +1,302 @@
 ![JTA](https://dam.mediacorp.sg/image/upload/s--e7I8o5qw--/c_fill,g_auto,h_676,w_1200/f_auto,q_auto/v1/tdy-migration/file6rv1xtrdjpy1347083k9.jpg?itok=DWUIJt8g)
 
-# Organisation Data Processor App
+# Organisation Data Checker & TXT Generator (v2)
 
-A desktop tool that automatically cleans, validates, and formats student records for reporting submissions.
+A desktop tool that validates Excel student records, splits them by level/stream, and generates submission-ready fixed-width TXT files.
 
-**Download:** [Latest Release](https://github.com/amirulshafiq98/Work-Stuff/releases/download/Data_Cleaning/Data.Processor.App.zip)
+**Download:**  
+➡️ **Download the latest ZIP from the Releases section of this repository**  
+(Extract the ZIP and run the application inside the folder)
+
+**Or you can click [Download](https://github.com/amirulshafiq98/Work-Stuff/releases/download/v2/Data.Processor.App.zip)**
 
 ---
 
 ## What This Tool Does
 
-This tool takes messy student data from multiple sources and turns it into clean, submission-ready files. It saves hours of manual work by:
+<img width="954" height="496" alt="updated1" src="https://github.com/user-attachments/assets/2f8d0294-b619-4b38-8471-38c56d27137b" />
 
-- ✅ Automatically merging data from different systems
-- ✅ Checking and removing invalid records
-- ✅ Sorting students into the correct reporting categories
-- ✅ Creating both Excel files (for review) and fixed-width text files
-- ✅ Keeping a record of what was changed or removed
+This tool takes a **single prepared Excel file**, validates the data, splits it by student level/stream into separate Excel files, and converts them into **submission-ready TXT files**.
 
-**Why this matters:** Manual data cleaning is slow, error-prone, and hard to verify. This tool makes the process repeatable, fast, and creates an audit trail.
+It is designed for situations where:
+- school names have already been manually verified
+- data has already been cleaned upstream
+- strict formatting rules must be enforced consistently
+- records need to be separated by educational level/stream
+
+The tool helps by:
+
+- ✅ Loading a single Excel file with all student records  
+- ✅ Validating NRIC format and field length rules  
+- ✅ Checking that LEVEL+STREAM can be mapped to output groups (PSLE / NA / NT / EX)  
+- ✅ Flagging problematic rows clearly (with row numbers)  
+- ✅ Letting users decide whether to fix or remove invalid rows  
+- ✅ Splitting cleaned data into separate Excel files by group  
+- ✅ Generating fixed-width TXT files only when data is clean  
+- ✅ Keeping the process simple and repeatable  
+
+**Why this matters:**  
+Manual checking and splitting of hundreds of records is error-prone. This tool ensures the final submission files are properly grouped and always meet the required format before submission.
 
 ---
 
 ## Who Should Use This
 
-- Staff who prepare student data for submissions
-- Anyone who needs to process Organisation student records
-- Non-technical users (the tool has a simple point-and-click interface)
+- Staff preparing student data for official submissions  
+- Users who already have consolidated Excel outputs and need validation + splitting  
+- Non-technical users (simple point-and-click interface)  
+
+No programming knowledge is required.
 
 ---
 
 ## How to Use It
 
-![Picture1](https://github.com/user-attachments/assets/7aac9e6a-e90c-498a-8da8-d04d82641c56)
-
 ### Step 1: Download and Extract
-Download the ZIP file from the link above and extract it to a folder on your computer.
+[Download](https://github.com/amirulshafiq98/Work-Stuff/releases/download/v2/Data.Processor.App.zip) the ZIP file and extract it to a folder on your computer.
 
-### Step 2: Run the Program
-Double-click the program file to open it. You'll see a window with two options:
-
-**Option 1: Process New Data**
-- Use this when you have fresh raw data files
-- Click "Select Files" and choose your input files (CSV and Excel)
-- Choose which cleaning rules to apply (checkboxes)
-- Click "Process" and wait for it to finish
-- Your clean files will appear in the output folder
-
-**Option 2: Regenerate TXT Files**
-- Use this when you've already processed data but made manual edits to the Excel files
-- Select the Excel files you edited
-- Click "Generate TXT" to create new submission files
-- This saves you from re-processing everything from scratch
-
-### Step 3: Review the Outputs
-The tool creates several files:
-- **Excel files** (one for each student category) - for human review
-- **TXT files** (matching each Excel file) - for ORG_2 submission
-- **Log file** - shows what the tool did
-- **Removed records file** - lists any students that were excluded and why
+> **Important:**  
+> Do not move the `.exe` out of the extracted folder. All reference files must stay together. That includes the school list file.
 
 ---
 
-## What Data This Tool Processes
+### Step 2: Prepare Your Excel File
 
-### Input Files Required
-You need two files:
-1. **Internal attendance file** (CSV format) - from your internal system
-2. **Salesforce export** (Excel format) - from your CRM
+Your Excel file should contain **all student records** with these columns:
 
-### Student Categories
-The tool automatically sorts students into four groups based on their level and stream:
-- PSLE (Primary 6)
-- Secondary 4 Normal Academic (NA)
-- Secondary 4 Normal Technical (NT)  
-- Secondary 4 Express (EX)
+- NRIC  
+- School Name  
+- Student Name  
+- Level  
+- Stream  
 
-### Data Cleaning Rules
-You can turn these on or off:
-- **Remove invalid NRICs** - Removes students with incorrectly formatted ID numbers
-- **Remove duplicates** - Keeps only one record per student
-- **Clean names** - Removes weird characters from student names and makes them uppercase
+(Exact column names can be selected inside the app.)
+
+**Example file structure:**
+- `Student_Records_2026.xlsx`
+- Only **<ins>1 sheet</ins>** in the Excel file
+
+The tool will automatically split this into separate files based on Level + Stream values.
 
 ---
 
-## Output Files Explained
+### Step 3: Select Excel File
 
-### Excel Files
-One Excel file per student category, named like:
+1. Open the application  
+2. Click **Browse...** and select your Excel file  
+3. The tool will load column headers automatically  
+
+---
+
+### Step 4: Map Columns
+
+Choose which columns represent:
+- NRIC  
+- School Name  
+- Student Name  
+- Level  
+- Stream  
+
+> **Note:** If your column names match exactly (e.g., "NRIC", "SCHOOL NAME", "STATUTORY NAME", "LEVEL", "STREAM"), they will be auto-selected.
+
+---
+
+### Step 5: Validate Excel File
+
+Click **Validate Excel File**.
+
+The tool checks:
+- NRIC format (exactly 9 characters, valid pattern like S1234567A)  
+- School name length (max 66 characters)  
+- Student name length (max 66 characters)  
+- Level + Stream mapping (must match PSLE / NA / NT / EXPRESS)  
+
+If issues are found:
+- they are shown clearly in the log  
+- row numbers and value previews are displayed  
+- splitting and TXT generation are blocked until resolved  
+
+---
+
+### Step 6: Fix or Remove Problem Rows
+
+If validation fails, you have two options:
+
+**Option A: Fix in Excel**
+- Open your Excel file  
+- Correct the values  
+- Save  
+- Re-run validation  
+
+**Option B: Remove Problem Rows**
+- Click **Remove Problem Rows**  
+- The tool drops invalid rows in memory  
+- An audit Excel file is saved showing what was removed and why  
+- Cleaned data is automatically split into Excel files by group  
+- Validation passes once all issues are removed  
+
+---
+
+### Step 7: Review Split Excel Files
+
+After validation passes (or after removing rows), the tool creates:
+
+**Folder:** `EXCEL_OUTPUT_YYYYMMDD_HHMMSS`
+
+**Files created:**
 - `ORG_MTSCTP PSLE.xlsx`
 - `ORG_MTSCTP SEC 4 NA.xlsx`
 - `ORG_MTSCTP SEC 4 NT.xlsx`
 - `ORG_MTSCTP SEC 4 EX.xlsx`
 
-These files are for human review. You can open them, check the data, and make manual corrections if needed.
+> **Tip:** You can open these Excel files to review how records were grouped before generating final TXT files.
+
+---
+
+### Step 8: Generate TXT Files
+
+Once Excel files are created:
+1. Click **Generate TXT Files**  
+2. The tool creates a new folder:
+
+`TXT_OUTPUT_YYYYMMDD_HHMMSS`
+
+3. TXT files are written inside this folder with matching names
+
+---
+
+## Output Files Explained
+
+<img width="262" height="213" alt="Untitled" src="https://github.com/user-attachments/assets/7ed23ab7-d72f-494c-88dc-63ae16419cf9" />
+
+### Excel Files (Intermediate Output)
+
+Created in `EXCEL_OUTPUT_YYYYMMDD_HHMMSS/` folder.
+
+One Excel file per group:
+- PSLE students  
+- Secondary 4 NA students  
+- Secondary 4 NT students  
+- Secondary 4 EX students  
+
+These files contain the cleaned, validated data ready for review before TXT generation.
+
+---
 
 ### TXT Files (Fixed-Width Format)
 
-<img width="390" height="148" alt="Picture3" src="https://github.com/user-attachments/assets/588f9c59-37e4-4146-a34c-3b50012980ab" />
+Created in `TXT_OUTPUT_YYYYMMDD_HHMMSS/` folder.
 
-One TXT file per student category (matching the Excel files). These are formatted exactly how ORG_2 wants them:
-- NRIC: 9 characters wide
-- School Name: 66 characters wide  
-- Student Name: 66 characters wide
+One TXT file is generated per Excel group file.
 
-**Important:** If a school name or student name is too long, the tool will automatically cut it to fit and write a warning in the log file.
+Each line is formatted as:
+- **NRIC:** 9 characters  
+- **School Name:** 66 characters  
+- **Student Name:** 66 characters  
 
-### Log Files
-- `Processing_Log_<timestamp>.txt` - Shows everything the tool did
-- `Removed_Records_<timestamp>.xlsx` - Lists students who were excluded
-- `Removed_Records_<timestamp>.txt` - Same as above, in text format
+If a value is too long, it is **trimmed automatically**.
 
-These files help you verify what changed and why.
+The output is ready for submission without further formatting.
 
 ---
 
-## Common Workflows
+### Audit File (When Rows Are Removed)
 
-### First Time Processing
-1. Get your two input files (attendance CSV + CRM Excel)
-2. Open the tool and choose "Process New Data"
-3. Select both input files
-4. Turn on the cleaning rules you want
-5. Click Process
-6. Review the Excel outputs
-7. Submit the TXT files to ORG_2
+<img width="373" height="162" alt="updated2" src="https://github.com/user-attachments/assets/2e05c2fc-1361-43c2-9644-44983124385f" />
 
-### After Making Manual Edits
+If you use the "Remove Problem Rows" option, an audit file is created:
 
-![Picture2](https://github.com/user-attachments/assets/dcbc134b-0879-43e6-af14-e5d637b0d67a)
+**File:** `REMOVED_ROWS_AUDIT_YYYYMMDD_HHMMSS.xlsx`
 
-Sometimes you need to fix specific records by hand (like correcting a school name spelling). Here's how:
-1. Open the Excel file from the previous processing
-2. Make your corrections directly in Excel
-3. Save the Excel file
-4. Open the tool and choose "Regenerate TXT Files"
-5. Select your edited Excel files
-6. Click Generate TXT
-7. The tool creates fresh TXT files without re-running all the validation
+This file shows:
+- which rows were removed  
+- why they were removed  
+- what group they would have belonged to  
 
-This saves time and preserves your manual fixes.
+This provides a clear record of what was excluded from the final submission.
 
 ---
 
-## Technical Details
+### Log Output
 
-### Built With
-- Python (programming language)
-- Tkinter (creates the window interface)
-- Pandas (handles spreadsheet data)
+<img width="1013" height="218" alt="Screenshot 2026-02-15 115458" src="https://github.com/user-attachments/assets/0435b1f4-ef1f-46b4-9785-107474de319a" />
 
-### File Merging Logic
-The tool matches records using:
-- **Internal system:** Uses the `Student Ref No.` field
-- **CRM system:** Uses the `Registration ID` field
+The log window shows:
+- which file was loaded  
+- which rows failed validation  
+- why validation failed  
+- how many Excel files were created  
+- how many TXT files were generated  
 
-Both must exist for a record to be included.
-
-### Known Limitations
-- Input files must have the expected column names (tool will show an error if they're missing)
-- Long school/student names get automatically shortened to fit the fixed-width format (check the log file for warnings)
-- School name spelling is NOT checked automatically - you must verify this manually before submission
+This makes it easy to verify decisions before submission.
 
 ---
 
-## Future Improvements
+## Reference Files
 
-Things that could make this tool even better:
-- Add a school name checker (auto-correct common spelling variations)
-- Show a preview of the data before saving files
-- Add a summary dashboard showing how many records were processed/removed
-- Package as a standalone .exe file that doesn't need Python installed
+This application includes a **local School List** file for reference.
+
+- It can be opened directly from the app via the clickable link  
+- It is provided for **manual verification only**  
+- School name spelling is **not auto-corrected**  
+
+Users are responsible for confirming school names before submission.
+
+---
+
+## Common Workflow
+
+### Standard Submission Flow
+1. Prepare single Excel file with all students  
+2. Verify school names manually using reference list  
+3. Select Excel file in the app  
+4. Map columns (NRIC, School, Name, Level, Stream)  
+5. Validate file  
+6. Fix or remove invalid rows  
+7. Review split Excel files (grouped by level/stream)  
+8. Generate TXT files  
+9. Submit TXT files  
+
+---
+
+## Level/Stream Grouping Rules
+
+The tool automatically groups records based on Level and Stream values:
+
+**PSLE Group:**
+- Level must be exactly: **"P6"**
+
+**Secondary Groups (Level must be exactly "S4"):**
+- **NA:** Stream must be **"G2"** or **"Normal Academic"**  
+- **NT:** Stream must be **"G1"** or **"Normal Technical"**  
+- **EX:** Stream must be **"G3"** or **"Express"**  
+
+> **Important:** If a row's Level + Stream cannot be mapped to any group, it will be flagged as problematic during validation.
+
+---
+
+## Technical Details (For Reference)
+
+- Built with Python  
+- Desktop GUI using Tkinter  
+- Excel handling via Pandas / OpenPyXL  
+- No internet connection required  
+- No data is sent anywhere  
 
 ---
 
 ## Privacy & Security Note
 
-This repository does not include:
-- Real student data
-- Sample input files  
-- Example outputs
+This repository does **not** contain:
+- real student data  
+- sample Excel inputs  
+- example submission files  
 
-The underlying data represents sensitive student information and is not publicly shared.
-
----
-
-## Questions or Issues?
-
-If the tool isn't working as expected:
-1. Check that your input files have the correct column names
-2. Review the log file for error messages
-3. Check the removed records file to see if your data was excluded by a validation rule
+The tool is designed to operate on sensitive data locally without uploading or sharing any information.
 
 ---
 
-## License
+## Previous Versions
 
-_[Add your license here if applicable]_
+- **App v1** – Full data processing pipeline for CCIS-based files (merge, clean, regenerate)  
+  See `Old Versions/App v1/README.md`
