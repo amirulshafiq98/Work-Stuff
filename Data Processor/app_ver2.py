@@ -791,9 +791,8 @@ class ExcelToTXTCheckerApp:
             excel_path = Path(self.excel_path_var.get().strip())
             base_folder = excel_path.parent
 
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            excel_out_folder = base_folder / f"EXCEL_OUTPUT_{ts}"
-            excel_out_folder.mkdir(parents=True, exist_ok=True)
+            # Save directly in the base folder (no timestamp subfolder)
+            excel_out_folder = base_folder
             self.excel_output_folder = excel_out_folder
 
             self.log("=" * 90, "INFO")
@@ -820,13 +819,47 @@ class ExcelToTXTCheckerApp:
                     continue
 
                 group_df = pd.DataFrame(rows)
+                
+                # Extract only the 3 columns we need and rename them
+                df_export = group_df[[nric_col, school_col, name_col]].copy()
+                df_export.columns = ['NRIC', 'SCHOOL NAME', 'STATUTORY NAME']
+                
+                # Clean and uppercase all text (like in the notebook)
+                for col in df_export.columns:
+                    df_export[col] = (
+                        df_export[col]
+                        .astype(str)
+                        .str.replace('\u00A0', ' ', regex=False)   # handles Excel hidden spaces
+                        .str.replace(r'\s+', ' ', regex=True)      # collapses repeated whitespace
+                        .str.strip()
+                        .str.upper()
+                    )
+                
+                # Clean NRIC specifically (remove all whitespace)
+                df_export["NRIC"] = (
+                    df_export["NRIC"]
+                    .astype(str)
+                    .str.upper()
+                    .str.strip()
+                    .str.replace(r"\s+", "", regex=True)
+                )
+                
+                # DROP DUPLICATES BASED ON NRIC ONLY (just like the notebook)
+                before = len(df_export)
+                df_export = df_export.drop_duplicates(subset=["NRIC"], keep="first").copy()
+                after = len(df_export)
+                
                 excel_name = self.output_names[group_key]
                 excel_file_path = excel_out_folder / f"{excel_name}.xlsx"
 
-                with pd.ExcelWriter(excel_file_path, engine="openpyxl") as writer:
-                    group_df.to_excel(writer, sheet_name="Data", index=False)
+                # Remove old file if exists
+                if excel_file_path.exists():
+                    excel_file_path.unlink()
 
-                self.log(f"Created Excel: {excel_name}.xlsx (records={len(group_df)})", "SUCCESS")
+                with pd.ExcelWriter(excel_file_path, engine="openpyxl") as writer:
+                    df_export.to_excel(writer, index=False)
+
+                self.log(f"Created Excel: {excel_name}.xlsx (records={after}, removed {before - after} duplicates)", "SUCCESS")
                 excel_files_created += 1
 
             self.log(f"Excel files created: {excel_files_created}", "SUCCESS")
@@ -879,9 +912,8 @@ class ExcelToTXTCheckerApp:
             excel_path = Path(self.excel_path_var.get().strip())
             base_folder = excel_path.parent
 
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            txt_out_folder = base_folder / f"TXT_OUTPUT_{ts}"
-            txt_out_folder.mkdir(parents=True, exist_ok=True)
+            # Save directly in the base folder (no timestamp subfolder)
+            txt_out_folder = base_folder
 
             nric_col = self.col_nric.get().strip()
             school_col = self.col_school.get().strip()
@@ -942,11 +974,17 @@ class ExcelToTXTCheckerApp:
     # ---------------- Fixed-width formatting ----------------
     @staticmethod
     def fixed_width_format(df: pd.DataFrame, nric_col: str, school_col: str, name_col: str) -> str:
+        """
+        Generate fixed-width TXT format.
+        Note: The Excel files already have columns renamed to 'NRIC', 'SCHOOL NAME', 'STATUTORY NAME'
+        and are already cleaned/uppercased/deduplicated.
+        """
         lines = []
         for _, row in df.iterrows():
-            nric = str(row[nric_col]).strip()[:9].ljust(9)
-            school = str(row[school_col]).strip()[:66].ljust(66)
-            name = str(row[name_col]).strip()[:66].ljust(66)
+            # Use the renamed column names from the Excel files
+            nric = str(row['NRIC']).strip()[:9].ljust(9)
+            school = str(row['SCHOOL NAME']).strip()[:66].ljust(66)
+            name = str(row['STATUTORY NAME']).strip()[:66].ljust(66)
             lines.append(nric + school + name)
         return "\n".join(lines)
 
