@@ -68,7 +68,9 @@ Your Excel file should contain **all student records** with these columns:
 - School Name  
 - Student Name  
 - Level  
-- Stream  
+- Stream
+- School Check (from XLookup of School List)
+- Program
 
 (Exact column names can be selected inside the app.)
 
@@ -95,9 +97,11 @@ Choose which columns represent:
 - School Name  
 - Student Name  
 - Level  
-- Stream  
+- Stream
+- School Check
+- Program
 
-> **Note:** If your column names match exactly (e.g., "NRIC", "SCHOOL NAME", "STATUTORY NAME", "LEVEL", "STREAM"), they will be auto-selected.
+> **Note:** If your column names match exactly (e.g., "NRIC", "SCHOOL NAME", "STATUTORY NAME", "LEVEL", "STREAM", "SCHOOL CHECK", "PROGRAM"), they will be auto-selected.
 
 ---
 
@@ -109,7 +113,9 @@ The tool checks:
 - NRIC format (exactly 9 characters, valid pattern like S1234567A)  
 - School name length (max 66 characters)  
 - Student name length (max 66 characters)  
-- Level + Stream mapping (must match PSLE / NA / NT / EXPRESS)  
+- Level + Stream mapping (must match PSLE / NA / NT / EXPRESS)
+- School check (TRUE is kept, FALSE is excluded)
+- Program (keep them in short-hand CODE format)
 
 If issues are found:
 - they are shown clearly in the log  
@@ -265,6 +271,7 @@ The tool automatically groups records based on Level and Stream values:
 
 **PSLE Group:**
 - Level must be exactly: **"P6"**
+- And the other 2 programs (updated as of March 2026)
 
 **Secondary Groups (Level must be exactly "S4"):**
 - **NA:** Stream must be **"G2"** or **"Normal Academic"**  
