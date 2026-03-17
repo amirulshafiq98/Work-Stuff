@@ -5,7 +5,7 @@
 An Excel automation tool that calculates the closest geographic matches between two sets of locations using Singapore postal codes and [OneMap](https://www.onemap.gov.sg) Singapore.
 
 **Download:**
-➡️ [Download] the latest ZIP from the **Releases** section of this repository.
+➡️ Download [Proximity Checker.zip](https://github.com/amirulshafiq98/Work-Stuff/releases/tag/Proximity_Checker) from the **Releases** section of this repository.
 Extract the ZIP and ensure that the `.exe` and all necessary files remain in the same ZIP folder.
 
 ---
@@ -108,12 +108,14 @@ def haversine_km(lat1, lon1, lat2, lon2):
 
 ## How to Update Centre Postal Codes and the Coordinates?
 
+<img width="749" height="224" alt="image" src="https://github.com/user-attachments/assets/73fe7474-04a5-4903-92d7-3d8f0313349a" />
+
 If the existing postal codes are outdated, follow the instructions below to update them:
 
-1. **Download the [Postal Code] ZIP file** — This ZIP file contains the necessary files to regenerate the coordinates based on inputted postal codes.
+1. **Download the [Postal Code.zip](https://github.com/amirulshafiq98/Work-Stuff/releases/tag/Proximity_Checker) file** — This ZIP file contains the necessary files to regenerate the coordinates based on inputted postal codes.
 2. **Input Postal Codes and the Names of the buildings in `Postal Code.xlsm`** — Once updated, click the `Generate Output` button.
 3. **Wait for Processing** — The tool cleans postal codes, calls the OneMap API and fills in the longitude and latitude of the buildings based on the postal code.
-4. **Check the Output** — If any blanks are present, it indicates that the postal code was not written correctly. Re-enter the details, clear the output, and regenerate the coordinates.
+4. **Check the Output** — If any blanks are present, it indicates that the postal code was not written correctly. Re-enter the details, clear the output (with the `Clear Output` button), and regenerate the coordinates.
 5. **After Processing** — Copy all rows **_excluding the headers_** under `Centre Name`, `Postal Code`, `Latitude`, `Longitude` and paste them into the `Centre Info` sheet in `file_with_centres.xlsm`
 
 ---
@@ -123,4 +125,5 @@ If the existing postal codes are outdated, follow the instructions below to upda
 - **Internet required** — The tool cannot run offline; it needs to reach the OneMap API.
 - **Straight-line distance only** — Does not account for actual road routes or public transport travel times.
 - **Singapore postal codes only** — Only valid 6-digit Singapore postal codes are supported. Other formats will result in missing output data.
-- **No Preference Assigning** — The assignment does not account for duplicate postal codes. So if 2 people have the same postal code, they will both have the same 3 closest centres
+- **No preference assigning** — The assignment does not account for duplicate postal codes. So if 2 people have the same postal code, they will both have the same 3 closest centres
+- **Columns cannot be altered** - Users have to maintain the column names and the file names in order for the buttons to work as intended
