@@ -1,0 +1,22 @@
+Option Explicit
+
+Sub RunDistanceChecker()
+
+    Dim exePath As String
+    Dim workbookPath As String
+    Dim command As String
+
+    workbookPath = ThisWorkbook.FullName
+    exePath = ThisWorkbook.Path & "\proximity_checker.exe"
+
+    If Dir(exePath) = "" Then
+        MsgBox "EXE not found here: " & exePath, vbExclamation
+        Exit Sub
+    End If
+
+    ThisWorkbook.Save
+
+    command = Chr(34) & exePath & Chr(34) & " " & Chr(34) & workbookPath & Chr(34)
+    Shell command, vbNormalFocus
+
+End Sub
