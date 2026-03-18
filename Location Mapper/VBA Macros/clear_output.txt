@@ -1,0 +1,19 @@
+Sub CleanOutput()
+
+    Dim ws As Worksheet
+    Dim lastRow As Long
+
+    Set ws = ThisWorkbook.Sheets("Output")
+
+    'Find last used row in column A
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    'Ensure we don't clear headers
+    If lastRow < 6 Then
+        lastRow = 6
+    End If
+
+    'Clear the results area
+    ws.Range("A6:H" & lastRow).ClearContents
+
+End Sub
